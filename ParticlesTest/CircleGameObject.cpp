@@ -1,6 +1,5 @@
 #include "CircleGameObject.h"
 
-
 CircleGameObject::CircleGameObject(){
 	this->gameObjectShape = GameObjectShape::circle;
 	this->radius = 1;
@@ -62,7 +61,7 @@ void CircleGameObject::UpdateRigidBody(){
 	if(!isKinematic)
 		this->rigidbody->position += this->rigidbody->velocity * (float)DELTA_TIME;
 	if (respectGravity)
-		this->rigidbody->velocity.y += GRAVITY_ACC * DELTA_TIME;
+		this->rigidbody->velocity.y += GRAVITY_ACC * DELTA_TIME * this->rigidbody->mass;
 
 	if (this->rigidbody->position.y + this->radius > 715) {
 		this->rigidbody->velocity.y = 0;
