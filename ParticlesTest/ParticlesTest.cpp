@@ -10,31 +10,34 @@
 using namespace cimg_library;
 using namespace std::chrono;
 
+///<sumary>
+///<para>Definition of some constants and global objects used in the simulation</para>
+///</sumary>
+const nanoseconds FRAMETIME(16666666);		// 1/60 sec or 1666666.10^-9
 float GRAVITY_ACC = 9.81;
 double DELTA_TIME = (float)1/(float)18;
 
 int main()
 {
-	const nanoseconds FRAMETIME(16666666);		// 1/60 sec or 1666666.10^-9
-	using clock = high_resolution_clock;	
-	nanoseconds accumulator(0ns);
-
+	//Aplication window settings
 	unsigned int winHeight = 720;
 	unsigned int winWidth = 1280;
-
+	CImgDisplay main_disp(winWidth, winHeight, "Particle Simulator");
 	bool hasClicked = false;
 	bool zeroMass;
 	float rad = 25;
 
+	//Simulation objects and settings
 	std::list<GameObject*> objPool;
 
-	CImgDisplay main_disp(winWidth, winHeight, "Particle Simulator");
+	using clock = high_resolution_clock;
+	nanoseconds accumulator(0ns);
 	auto lastFramStartTime = clock::now();
+	auto timeNow = clock::now();
 
-	while (!main_disp.is_closed()){
-		auto timeNow = clock::now();					// Get current time
-		auto deltaTime = timeNow - lastFramStartTime;	// Find the DeltaTime between frames
-		lastFramStartTime = timeNow;					// Uptade the 
+	while (!main_disp.is_closed()){	
+		auto deltaTime = timeNow - lastFramStartTime;	
+		lastFramStartTime = timeNow;					
 		accumulator += duration_cast<nanoseconds>(deltaTime);
 		CImg<unsigned char> img(winWidth, winHeight, 1, 3, 0);
 
