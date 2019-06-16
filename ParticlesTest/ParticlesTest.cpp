@@ -7,14 +7,17 @@
 #include "Vector2.h"
 #include <string>
 #include "CollisionHandler.h"
+#include "MovableParticle.h"
+#include <math.h>
 
 using namespace cimg_library;
 using namespace std::chrono;
 
 //Definition of some constants and globals used in the simulation
-const nanoseconds FRAMETIME(16666666);		// 1/60 sec or 1666666.10^-9
+const nanoseconds FRAMETIME(1666666);		// 1/60 sec or 1666666.10^-9
 float GRAVITY_ACC = 9.81;
 double DELTA_TIME = (double)1/(double)60;
+CImgDisplay *MainWindow;
 
 int main()
 {
@@ -22,6 +25,7 @@ int main()
 	unsigned int winHeight = 720;
 	unsigned int winWidth = 1200;
 	CImgDisplay main_disp(winWidth, winHeight, "Particle Simulator");
+	MainWindow = &main_disp;
 	main_disp.move(305, 20);
 	CImgDisplay config_disp(300, 300, "Configuration Window");
 	config_disp.move(0, 20);
@@ -103,6 +107,7 @@ int main()
 
 		//Draw frame loop
 		for (GameObject* o : objPool) {
+			o->Update();
 			o->Draw(img);
 		}
 
@@ -111,13 +116,15 @@ int main()
 		// Window controller and other non-simulation related events-------------
 
 		// SPAWN NEW OBJECT
-		if (main_disp.button() && main_disp.mouse_y() >= 0 && (!hasClicked || multiBrush)) {
+		if (main_disp.button()&2 && main_disp.mouse_y() >= 0 && (!hasClicked || multiBrush)) {
 			float x = main_disp.mouse_x();
 			float y = main_disp.mouse_y();
 
 			unsigned char color[3] = { 255, 255, 255 };
 
-			GameObject* newObj = new CircleGameObject(_radius, x, y, color, _mass, _restitution);
+			GameObject* newObj = new MovableParticle(_radius, x, y, color, _mass, _restitution);
+			newObj->respectGravity = false;
+			newObj->isKinematic = simulate;
 			newObj->Draw(img);
 			objPool.push_back(newObj);
 			hasClicked = true;
@@ -125,26 +132,40 @@ int main()
 		else {
 			if (hasClicked && !main_disp.button()) { hasClicked = false; }
 		}
+		if (main_disp.button() & 1 && main_disp.mouse_y() >= 0) {
+			float x = main_disp.mouse_x();
+			float y = main_disp.mouse_y();
+
+			for (GameObject* o : objPool) {
+				if (std::abs((o->rigidbody->position - Vector2(x, y)).Lenght()) <= _radius) {
+					Vector2 dir = (Vector2(x, y) - o->rigidbody->position).Normalized();
+					o->rigidbody->velocity += dir * _mass;
+				}
+			}
+		}
 
 		// RESET OBJECT POOL
 		if (main_disp.key(0) == main_disp.keycode("R")) {
 			objPool.clear();
+			_radius = 10;
+			_mass = 10;
+			_restitution = 1;
 		}
 
 		// RADIUS
 		if (main_disp.key(0) == main_disp.keycode("Q")) {
-			_radius += 10.0f * DELTA_TIME;
+			_radius += 20.0f * DELTA_TIME;
 		}
 		else if (main_disp.key(0) == main_disp.keycode("A")) {
-			_radius -= 10.0f * DELTA_TIME;
+			_radius -= 20.0f * DELTA_TIME;
 		}
 
 		// MASS
 		if (main_disp.key(0) == main_disp.keycode("W")) {
-			_mass += 10.0f * DELTA_TIME;
+			_mass += 20.0f * DELTA_TIME;
 		}
 		if (main_disp.key(0) == main_disp.keycode("S")) {
-			_mass -= 10.0f * DELTA_TIME;
+			_mass -= 20.0f * DELTA_TIME;
 		}
 		if (main_disp.key(0) == main_disp.keycode("X")) {
 			_mass = 0;
@@ -202,6 +223,14 @@ int main()
 		config_img.draw_text(0, 0, str.c_str(), color, 0, 1, 20);
 
 		//Draw stuff on screen
+		for (GameObject* o : objPool) {
+			int nx, ny, nnx, nny;
+			Vector2 pos = o->rigidbody->position;
+			Vector2 dir = (pos + o->rigidbody->velocity) - pos;
+			dir /= 10;
+			img.draw_arrow(pos.x, pos.y, pos.x+dir.x, pos.y+dir.y, "RED", 0.8f, 25.0f, 10);
+		}
+		img.draw_circle(mx, my, _radius, "RED", 0.4f);
 		config_disp.display(config_img);
 		main_disp.display(img);
 	}

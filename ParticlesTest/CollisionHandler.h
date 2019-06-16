@@ -27,9 +27,9 @@ void ResolveCollision(Manifold manifold) {
 
 	Vector2 impulse = manifold.normal * j;
 
-	if(inverseMassA != 0)
+	if(inverseMassA != 0 && !A->isKinematic)
 		A->rigidbody->velocity -= inverseMassA * impulse;
-	if (inverseMassB != 0)
+	if (inverseMassB != 0 && !B->isKinematic)
 		B->rigidbody->velocity += inverseMassB * impulse;
 }
 
