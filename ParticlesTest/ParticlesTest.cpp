@@ -3,6 +3,7 @@
 #include "GameObject.h"
 #include <list>
 #include <chrono>
+#include <vector>
 #include "Vector2.h"
 #include <string>
 #include "CollisionHandler.h"
@@ -10,7 +11,7 @@
 using namespace cimg_library;
 using namespace std::chrono;
 
-//Definition of some constants and global objects used in the simulation
+//Definition of some constants and globals used in the simulation
 const nanoseconds FRAMETIME(16666666);		// 1/60 sec or 1666666.10^-9
 float GRAVITY_ACC = 9.81;
 double DELTA_TIME = (double)1/(double)60;
@@ -31,19 +32,26 @@ int main()
 	bool simulate_toggle = true;
 
 	//Object settings
-	float _radius = 25;
-	float _mass = 1;
+	float _radius = 10;
+	float _mass = 10;
 	float _restitution = 1;
 
 	//Simulation objects and settings
 	std::list<GameObject*> objPool;
 	Manifold manifold;
 
+	//Simulation Frame time management
 	using clock = high_resolution_clock;
 	nanoseconds accumulator(0ns);
+	nanoseconds secAccumulator(0ns);
 	auto timeSinceLastFrame	= clock::now();
 	auto timeNow			= clock::now();
+	int fixedUpdateFrame = 0;
+	int fixedUpdateFrameSnap = 0;
+	int variableUpdateFrame = 0;
+	int variableUpdateFrameSnap = 0;
 
+	// Actual simulation space
 	while (!main_disp.is_closed()){
 		// Game update tick 
 		timeNow = clock::now();							// Current frame time
@@ -53,33 +61,44 @@ int main()
 			accumulator += deltaTime;						// Get how much time has passed since last frame;
 		}
 		
+		//Framerate calculation
+		secAccumulator += deltaTime;
+		if (secAccumulator.count() >= 1000000000) {
+			secAccumulator = 0ns;
+			fixedUpdateFrameSnap = fixedUpdateFrame;
+			fixedUpdateFrame = 0;
+			variableUpdateFrameSnap = variableUpdateFrame;
+			variableUpdateFrame = 0;
+
+		}
 
 		CImg<unsigned char> img(winWidth, winHeight, 1, 3, 0);
 		CImg<unsigned char> config_img(300, 300, 1, 3, 0);
-
-		// Update the game 60 times per second. Sometimes the frame may lag from last time, so the logic keeps going until the delta time has
-		//passed. This maintein the 60 update calls.
+		
+		//Physics frame loop
 		while (accumulator >= FRAMETIME && simulate)
 		{
 			// Loop every object in the pool
 			for (GameObject* self : objPool) {
 				// For every object, loop over every other object in the pool to calculate colision detection and forces.
-				for (GameObject* other : objPool) {
+				for(GameObject * other : objPool) {
 					if (self != other) {
+						if (self->rigidbody->mass == 0) break;
 						manifold.A = self;
 						manifold.B = other;
 						if (self->gameObjectShape == GameObjectShape::circle && other->gameObjectShape == GameObjectShape::circle) {
-							if (CircleVsCricle(&manifold)) ResolveCollision(manifold);
+							if (CircleVsCricle(&manifold)) {
+								ResolveCollision(manifold);
+							}
 						}
 					}
 				}
 			}
-			// Updates the object after all colisions have been calculated. This is done due the fact that appling the forces right after
-			//calculating them may make other objects ignore a colision, even though they should not.
 			for (GameObject* self : objPool) {
 				self->UpdateRigidBody();
 			}
 			accumulator -= FRAMETIME;
+			fixedUpdateFrame++;
 		}
 
 		//Draw frame loop
@@ -87,6 +106,11 @@ int main()
 			o->Draw(img);
 		}
 
+		variableUpdateFrame++;
+
+		// Window controller and other non-simulation related events-------------
+
+		// SPAWN NEW OBJECT
 		if (main_disp.button() && main_disp.mouse_y() >= 0 && (!hasClicked || multiBrush)) {
 			float x = main_disp.mouse_x();
 			float y = main_disp.mouse_y();
@@ -95,13 +119,14 @@ int main()
 
 			GameObject* newObj = new CircleGameObject(_radius, x, y, color, _mass, _restitution);
 			newObj->Draw(img);
-			objPool.push_front(newObj);
+			objPool.push_back(newObj);
 			hasClicked = true;
 		}
 		else {
 			if (hasClicked && !main_disp.button()) { hasClicked = false; }
 		}
 
+		// RESET OBJECT POOL
 		if (main_disp.key(0) == main_disp.keycode("R")) {
 			objPool.clear();
 		}
@@ -135,6 +160,7 @@ int main()
 			if (_restitution <= 0) _restitution = 0;
 		}
 
+		// MULTIBRUSH
 		if (main_disp.key(0) == main_disp.keycode("F") && multiBrush_togle) {
 			multiBrush = !multiBrush;
 			multiBrush_togle = false;
@@ -144,6 +170,7 @@ int main()
 			multiBrush_togle = true;
 		}
 
+		// PAUSE SIMULATION
 		if (main_disp.key(0) == cimg::keySPACE && simulate_toggle) {
 			simulate = !simulate;
 			simulate_toggle = false;
@@ -153,6 +180,7 @@ int main()
 			simulate_toggle = true;
 		}
 
+		//Configuration string to display
 		auto str = "(Q,A)Radius: " + std::to_string(_radius);
 		str += "\n(W,S,X)Mass: " + std::to_string(_mass);
 		str += "\n(E,D)Resitution: " + std::to_string(_restitution);
@@ -160,7 +188,9 @@ int main()
 		str += "\n(F)MultiBrush: ";
 		str += multiBrush ? "true" : "false";
 		str += "\n"+std::to_string(deltaTime.count() / (double)1000000000);
-		str += "\nFPS: " + std::to_string((int)(1 / (deltaTime.count() / (double)1000000000)));
+		str += "\nFPS: " + std::to_string(variableUpdateFrameSnap);
+		str += "\nPhysics FPS: " + std::to_string(fixedUpdateFrameSnap);
+		str += "\nObjCount: " + std::to_string(objPool.size());
 
 		int mx = main_disp.mouse_x();
 		int my = main_disp.mouse_y();
@@ -170,11 +200,9 @@ int main()
 		str += simulate ? "true" : "false";
 		unsigned char color[3] = { 255, 255, 255};
 		config_img.draw_text(0, 0, str.c_str(), color, 0, 1, 20);
+
+		//Draw stuff on screen
 		config_disp.display(config_img);
 		main_disp.display(img);
 	}
-}
-
-void Update() {
-
 }
