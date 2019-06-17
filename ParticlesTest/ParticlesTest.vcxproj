@@ -154,19 +154,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CircleGameObject.cpp" />
     <ClCompile Include="GameObject.cpp" />
-    <ClCompile Include="MovableParticle.cpp" />
     <ClCompile Include="ParticlesTest.cpp" />
     <ClCompile Include="RigidBody.cpp" />
     <ClCompile Include="Vector2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Downloads\CImg.h" />
-    <ClInclude Include="CircleGameObject.h" />
     <ClInclude Include="CollisionHandler.h" />
     <ClInclude Include="GameObject.h" />
-    <ClInclude Include="MovableParticle.h" />
     <ClInclude Include="RigidBody.h" />
     <ClInclude Include="Vector2.h" />
   </ItemGroup>

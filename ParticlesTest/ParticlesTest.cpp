@@ -1,20 +1,19 @@
 #include <iostream>
-#include "CImg.h"
-#include "GameObject.h"
-#include <list>
+#include <string>
 #include <chrono>
 #include <vector>
-#include "Vector2.h"
-#include <string>
-#include "CollisionHandler.h"
-#include "MovableParticle.h"
+#include <list>
 #include <math.h>
+#include "CImg.h"
+#include "Vector2.h"
+#include "CollisionHandler.h"
+#include "GameObject.h"
 
 using namespace cimg_library;
 using namespace std::chrono;
 
 //Definition of some constants and globals used in the simulation
-const nanoseconds FRAMETIME(1666666);		// 1/60 sec or 1666666.10^-9
+const nanoseconds FRAMETIME(16666666);		// 1/60 sec or 1666666.10^-9
 float GRAVITY_ACC = 9.81;
 double DELTA_TIME = (double)1/(double)60;
 CImgDisplay *MainWindow;
@@ -90,11 +89,7 @@ int main()
 						if (self->rigidbody->mass == 0) break;
 						manifold.A = self;
 						manifold.B = other;
-						if (self->gameObjectShape == GameObjectShape::circle && other->gameObjectShape == GameObjectShape::circle) {
-							if (CircleVsCricle(&manifold)) {
-								ResolveCollision(manifold);
-							}
-						}
+						DetectColision(&manifold);
 					}
 				}
 			}
@@ -122,9 +117,11 @@ int main()
 
 			unsigned char color[3] = { 255, 255, 255 };
 
-			GameObject* newObj = new MovableParticle(_radius, x, y, color, _mass, _restitution);
+			GameObject* newObj = new GameObject(
+				new Shape(_radius),
+				new RigidBody(x, y, _mass, _restitution),
+				false);
 			newObj->respectGravity = false;
-			newObj->isKinematic = simulate;
 			newObj->Draw(img);
 			objPool.push_back(newObj);
 			hasClicked = true;
