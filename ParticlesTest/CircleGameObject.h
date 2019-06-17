@@ -71,7 +71,7 @@ public:
 	CircleGameObject(float radius, float x, float y, float rotation, unsigned char color[3], float mass, float restitution);
 
 	virtual void Draw(cimg_library_suffixed::CImg<unsigned char>& canvas) override;
-	virtual void Update() override;
+	virtual void Update() {};
 	virtual void UpdateRigidBody() override;
 };
 

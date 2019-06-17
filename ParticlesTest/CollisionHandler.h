@@ -39,10 +39,15 @@ void ResolveCollision(Manifold manifold) {
 	j /= (inverseMassA + inverseMassB) != 0 ? (inverseMassA + inverseMassB) : 0;
 
 	Vector2 impulse = manifold.normal * j;
+<<<<<<< HEAD
 	
 	if (inverseMassA != 0) 
+=======
+
+	if(inverseMassA != 0 && !A->isKinematic)
+>>>>>>> ControlableRigidbody
 		A->rigidbody->velocity -= inverseMassA * impulse;
-	if (inverseMassB != 0)
+	if (inverseMassB != 0 && !B->isKinematic)
 		B->rigidbody->velocity += inverseMassB * impulse;
 
 	PositionalCorrection(manifold);

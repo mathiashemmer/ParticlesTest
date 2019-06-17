@@ -54,16 +54,28 @@ void CircleGameObject::Draw(cimg_library_suffixed::CImg<unsigned char>& canvas){
 	canvas.draw_circle(this->rigidbody->position.x, this->rigidbody->position.y, this->radius, this->color);
 }
 
-void CircleGameObject::Update(){
-}
-
 void CircleGameObject::UpdateRigidBody(){
 	if(!isKinematic)
 		this->rigidbody->position += this->rigidbody->velocity * (float)DELTA_TIME;
 	if (respectGravity)
 		this->rigidbody->velocity.y += GRAVITY_ACC * DELTA_TIME * this->rigidbody->mass;
 
+<<<<<<< HEAD
 	if (this->rigidbody->position.y + this->radius > 715) {
 		this->rigidbody->velocity.y *= -1;
+=======
+	if (this->rigidbody->position.y + this->radius > 720) {
+		this->rigidbody->velocity.y *= -1;
+	}
+	if (this->rigidbody->position.y - this->radius <= 0) {
+		this->rigidbody->velocity.y *= -1;
+	}
+
+	if (this->rigidbody->position.x + this->radius > 1200) {
+		this->rigidbody->velocity.x *= -1;
+	}
+	if (this->rigidbody->position.x - this->radius <= 0) {
+		this->rigidbody->velocity.x *= -1;
+>>>>>>> ControlableRigidbody
 	}
 }
