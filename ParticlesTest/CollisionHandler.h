@@ -12,8 +12,8 @@ public:
 
 void PositionalCorrection(Manifold m)
 {
-	const float percent = 0.8; // usually 20% to 80%
-	const float slop = 0.01; // usually 0.01 to 0.1
+	const float percent = 0.8;
+	const float slop = 0.01;
 
 	float inverseMassA = (m.A->rigidbody->mass != 0 ? 1 / m.A->rigidbody->mass : 0);
 	float inverseMassB = (m.B->rigidbody->mass != 0 ? 1 / m.B->rigidbody->mass : 0);
@@ -71,8 +71,4 @@ bool CircleVsCricle(Manifold *m) {
 	}
 
 	return true;
-}
-
-void AABBvsAABB(Manifold manifold) {
-
 }
