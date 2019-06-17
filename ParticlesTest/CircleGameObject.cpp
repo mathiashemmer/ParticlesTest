@@ -60,10 +60,6 @@ void CircleGameObject::UpdateRigidBody(){
 	if (respectGravity)
 		this->rigidbody->velocity.y += GRAVITY_ACC * DELTA_TIME * this->rigidbody->mass;
 
-<<<<<<< HEAD
-	if (this->rigidbody->position.y + this->radius > 715) {
-		this->rigidbody->velocity.y *= -1;
-=======
 	if (this->rigidbody->position.y + this->radius > 720) {
 		this->rigidbody->velocity.y *= -1;
 	}
@@ -76,6 +72,5 @@ void CircleGameObject::UpdateRigidBody(){
 	}
 	if (this->rigidbody->position.x - this->radius <= 0) {
 		this->rigidbody->velocity.x *= -1;
->>>>>>> ControlableRigidbody
 	}
 }
